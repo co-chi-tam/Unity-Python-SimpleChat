@@ -2,6 +2,7 @@
 using UnityEngine.Events;
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.IO;
 using System.Net.Sockets;
 using System.Threading;
@@ -14,6 +15,7 @@ public class PythonConnect : MonoBehaviour {
 
 	public Action<string> OnReceiveMessage;
 
+	private bool m_Connected;
 	private TcpClient m_Socket;
 	private NetworkStream m_NetStream;
 
@@ -22,14 +24,27 @@ public class PythonConnect : MonoBehaviour {
 
 	private Thread m_ReceiveThread;
 
+	private List<string> m_ReceiveStrings;
+	private int m_ReceiveStrCount;
+
+	private void Awake() {
+		m_ReceiveStrings = new List<string> ();
+		m_ReceiveStrCount = m_ReceiveStrings.Count;
+	}
+
 	private void Start() {
 		if (m_AutoConnect) {
 			Connect ();
 		}
 	}	
 
-	private void Update() {
-		
+	private void LateUpdate() {
+		if (m_ReceiveStrCount != m_ReceiveStrings.Count) {
+			if (OnReceiveMessage != null) {
+				OnReceiveMessage (m_ReceiveStrings[m_ReceiveStrCount]);
+				m_ReceiveStrCount = m_ReceiveStrings.Count;
+			}
+		}
 	}
 
 	private void OnApplicationQuit() {
@@ -46,6 +61,7 @@ public class PythonConnect : MonoBehaviour {
 			m_NetStream = m_Socket.GetStream();
 			m_StreamWriter = new StreamWriter (m_NetStream);
 			m_StreamReader = new StreamReader (m_NetStream);
+			m_Connected = m_Socket.Connected;
 			StartCoroutine (CreateReceiveListener());
 #if UNITY_EDITOR
 			Debug.Log ("Connected host " + m_Host + " port " + m_Port);
@@ -56,22 +72,27 @@ public class PythonConnect : MonoBehaviour {
 	}
 
 	private IEnumerator CreateReceiveListener() {
-		var waitingForEndOfFrame = new WaitForEndOfFrame ();
-		while (true) {
+		m_ReceiveThread = new Thread (ReceiveListener);
+		m_ReceiveThread.IsBackground = true;
+		m_ReceiveThread.Start ();
+		yield return null;
+	}
+
+	private void ReceiveListener() {
+		while (m_Connected) {
 			string receiveData = ReadSocket ();
 			if (string.IsNullOrEmpty (receiveData) == false) {
-				if (OnReceiveMessage != null) {
-					OnReceiveMessage (receiveData);
-				}
+				m_ReceiveStrings.Add (receiveData);
 #if UNITY_EDITOR
 				Debug.Log (receiveData);
 #endif
 			}
-			yield return waitingForEndOfFrame;
 		}
 	}
 		
 	public void WriteSocket(string value) {
+		if (m_Connected == false)
+			return;
 		if (m_StreamWriter == null)
 			return;
 //		var data = System.Text.Encoding.ASCII.GetBytes(value);
@@ -81,6 +102,8 @@ public class PythonConnect : MonoBehaviour {
 
 	public string ReadSocket() {
 		var value = string.Empty;
+		if (m_Connected == false)
+			return value;
 		if (m_StreamReader == null)
 			return value;
 		if (m_NetStream.DataAvailable)
@@ -89,6 +112,8 @@ public class PythonConnect : MonoBehaviour {
 	}
 
 	public void CloseSocket() {
+		if (m_Connected == false)
+			return;
 		try {
 			m_StreamReader.Close ();
 			m_StreamWriter.Close ();

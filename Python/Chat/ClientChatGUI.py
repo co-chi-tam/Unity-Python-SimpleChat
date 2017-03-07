@@ -37,7 +37,7 @@ class ClientFrame ( wx.Frame ):
 		self.m_ServerPortLabel.Wrap( -1 )
 		sbSizer1.Add( self.m_ServerPortLabel, 0, wx.ALL, 5 )
 		
-		self.m_ServerPortText = wx.TextCtrl( sbSizer1.GetStaticBox(), wx.ID_ANY, u"5000", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.m_ServerPortText = wx.TextCtrl( sbSizer1.GetStaticBox(), wx.ID_ANY, u"9999", wx.DefaultPosition, wx.DefaultSize, 0 )
 		self.m_ServerPortText.SetMaxLength( 10 ) 
 		sbSizer1.Add( self.m_ServerPortText, 0, wx.ALL, 5 )
 		

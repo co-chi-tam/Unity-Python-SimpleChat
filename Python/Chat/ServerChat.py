@@ -5,9 +5,10 @@ import _thread;
 server_socket = socket.socket (socket.AF_INET, socket.SOCK_STREAM)
 host = 'localhost' #socket.gethostname()
 port = 9999
+max_buffer = 2048
 
 server_socket.bind((host, port))
-server_socket.listen (5)
+server_socket.listen (20)
 
 CONNECTION_LIST = []
 
@@ -32,12 +33,13 @@ def broadcast_msg(sock, message):
             except:
                 socket.close()
                 CONNECTION_LIST.remove(socket)
+                continue
 
 while True:
     for sock in CONNECTION_LIST:
         if sock != server_socket:
             try: 
-                msg = sock.recv(1024)
+                msg = sock.recv(max_buffer)
                 if msg:
                     print (msg.decode('ascii'))
                     broadcast_msg (sock, msg)

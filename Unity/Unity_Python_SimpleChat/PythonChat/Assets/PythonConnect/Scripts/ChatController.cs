@@ -20,6 +20,7 @@ public class ChatController : MonoBehaviour {
 		if (string.IsNullOrEmpty (chatValue))
 			return;
 		m_PythonConnect.WriteSocket (chatValue);
+		value.text = string.Empty;
 	}
 
 }

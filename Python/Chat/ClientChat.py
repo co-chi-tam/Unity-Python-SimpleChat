@@ -10,12 +10,13 @@ class ClientChat(object):
     def clientConnect(self, host, port, revCallBack):
         self.host = host
         self.port = port
+        self.max_buffer = 2048
         self.client_socket.connect((self.host, self.port))
         _thread.start_new_thread(self.receiveMessage, (revCallBack, ))
         print ('Client starting ...')
     def receiveMessage(self, callback):
         while True:
-            msg = self.client_socket.recv(1024)
+            msg = self.client_socket.recv(self.max_buffer)
             if msg:
                 print ("Receive message: %s" % msg.decode('ascii'))
                 if callback:
