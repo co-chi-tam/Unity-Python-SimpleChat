@@ -76,10 +76,9 @@ namespace SocketIO
 					builder.Append(packet.json.ToString());
 				}
 
-				//#if SOCKET_IO_DEBUG
+				#if SOCKET_IO_DEBUG
 				Debug.Log("[SocketIO] Encoded: " + builder);
-				//#endif
-
+				#endif
 				return builder.ToString();
 			
 			} catch(Exception ex) {
